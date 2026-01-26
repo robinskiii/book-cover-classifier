@@ -1,0 +1,14 @@
+# Ignore the virtual environment folder
+venv/
+
+# Ignore the heavy dataset files
+*.csv
+*.jpg
+*.png
+/dataset/
+
+# Ignore Mac system files
+.DS_Store
+
+# Ignore compiled python files
+__pycache__/
