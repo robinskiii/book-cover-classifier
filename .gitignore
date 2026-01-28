@@ -2,10 +2,12 @@
 venv/
 
 # Ignore the heavy dataset files
+*.npz
 *.csv
 *.jpg
 *.png
 /dataset/
+
 
 # Ignore Mac system files
 .DS_Store
