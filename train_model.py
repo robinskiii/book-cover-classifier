@@ -40,29 +40,32 @@ def sigmoid(x):
     return (1/(1 + np.exp(-x)))
 
 def relu(x):
-    for i in range(len(x)):
-        if x[i]<0:
-            x[i]=0
-    return x
+    return np.maximum(0, x)
 
-def prediction(x, W1, b1, W2, b2):
+def prediction(X, W1, b1, W2, b2):
     """
     Calculates the models prediction for a given book.
     Model uses one hidden layer
     Input:
-        x    --> vector with 122880 parametera
-        W1   --> 122880 x 64 matrix for layer 1
-        b1   --> 64 vector for layer 1  
-        W2   --> 64 x 5 matrix for output
-        b2   --> 5 vector for output
+        X     --> matrix of vectors with 122880 parameters each
+        W1    --> 122880 x 64 matrix for layer 1
+        b1    --> 64 vector for layer 1  
+        W2    --> 64 x 5 matrix for output
+        b2    --> 5 vector for output
     Output:
-        y    --> prediction vector with probability for each 5 genres
+        y_hat --> prediction matrix with probability vectors for the 5 genres
     """
-    z = np.matmul(x, W1) + b1 #layer 1 calculation
-    z = relu(z) #layer 1 Relu activation 
-    z = np.matmul(z, W2) + b2 #output layer calculation
-    z = np.exp(z) #softmax part 1
-    return z / np.sum(z) #softmax part 2
+    y_hat = []
+
+    for i in range(len(X)):
+        z = np.matmul(X[i], W1) + b1 #layer 1 calculation
+        z = relu(z) #layer 1 Relu activation 
+        z = np.matmul(z, W2) + b2 #output layer calculation
+        z = np.exp(z) #softmax part 1
+        z /= np.sum(z) #softmax part 2
+        y_hat.append(z)
+
+    return y_hat
 
 def compute_cost(y_hat, y, W1, W2, lambda_):
     """
@@ -78,7 +81,7 @@ def compute_cost(y_hat, y, W1, W2, lambda_):
     J = 0
     m = len(y) #number of training examples
     
-    for i in range(n):
+    for i in range(m):
         J += -np.log(y_hat[i][y[i]]+ 1e-8) #adding 1e-8 to avoid crashes (log(0))
     
     #regularization term:
@@ -93,21 +96,15 @@ def compute_gradient(X, y, W1, b1, W2, b2):
     return  #to finish
 
 def apply_gradient_descent(X):
-    return 0
+    return 
 
 
 
 def main():
     X, y, classes = load_processed_data()
     W1, b1, W2, b2 = initialise_parameters()
-    print(X.shape)
-    print(y.shape)
-    print(classes,"\n")
-    print(W1.shape)
-    print(b1.shape)
-    print(W2.shape)
-    print(b2.shape)
-    print(prediction(X[0], W1, b1, W2, b2))
+    y_hat = prediction(X, W1, b1, W2, b2)
+    print(compute_cost(y_hat, y, W1, W2, lambda_= 0))
     
 
 if __name__ == "__main__":
