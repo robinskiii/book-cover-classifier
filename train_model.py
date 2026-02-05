@@ -64,20 +64,36 @@ def prediction(x, W1, b1, W2, b2):
     z = np.exp(z) #softmax part 1
     return z / np.sum(z) #softmax part 2
 
-    
-
-
-
-
-def compute_cost(X, y, W1, b1, W2, b2):
+def compute_cost(y_hat, y, W1, W2, lambda_):
     """
     Computes the cost over a set of training examples.
-    We want to find W that minimises cost.
+    We want to find W1, b1, W2, b2 that minimises cost.
+    Inputs:
+        y_hat   --> matrix containing prediction vector for each book
+        y       --> vector containing label genre for each book (as numbers 0-5)
+        lambda_ --> parameter for tweaking regularization
+    Output:
+        J       --> sum square error loss + regularization term
     """
-    return 0 #to finish (apply to neural network w multiclass)
+    J = 0
+    m = len(y) #number of training examples
+    
+    for i in range(n):
+        J += -np.log(y_hat[i][y[i]]+ 1e-8) #adding 1e-8 to avoid crashes (log(0))
+    
+    #regularization term:
+    regularization = np.sum(np.square(W1))+np.sum(np.square(W2))
+    regularization *= lambda_
+    
+    J += regularization
+    J /= m 
+    return J
 
-def compute_gradient(X, y, W_1, W_2):
-    return 0 #to finish
+def compute_gradient(X, y, W1, b1, W2, b2):
+    return  #to finish
+
+def apply_gradient_descent(X):
+    return 0
 
 
 
