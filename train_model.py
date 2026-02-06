@@ -127,7 +127,7 @@ def main():
     W1, b1, W2, b2 = initialise_parameters()
 
     #PARAMETERS
-    LEARNING_RATE = 0.02 #learning strength
+    LEARNING_RATE = 0.04 #learning strength
     EPOCHS = 5000 #learning iterations
     LAMBDA_ = 0  #regularization term
     
@@ -144,6 +144,11 @@ def main():
         
         #calculate gradients
         d_W1, d_b1, d_W2, d_b2 = compute_gradient(X, y, W1, b1, W2, b2, Y_hat, Z1, A1, LAMBDA_)
+
+        #every m iterations, we cut in half the learning rate
+        if i > 0 and i % 500 == 0:
+            LEARNING_RATE *= 0.8
+            print(f"--- Reducing learning rate to {LEARNING_RATE} ---")
         
         #update weights
         W1 = W1 - LEARNING_RATE * d_W1
