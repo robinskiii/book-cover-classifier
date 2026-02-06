@@ -36,12 +36,6 @@ def initialise_parameters():
     b2 = np.zeros(5)
     return W1, b1, W2, b2
 
-def sigmoid(x):
-    return (1/(1 + np.exp(-x)))
-
-def relu(x):
-    return np.maximum(0, x)
-
 def prediction(X, W1, b1, W2, b2):
     """
     Calculates the models prediction for a given book.
@@ -53,19 +47,25 @@ def prediction(X, W1, b1, W2, b2):
         W2    --> 64 x 5 matrix for output
         b2    --> 5 vector for output
     Output:
-        y_hat --> prediction matrix with probability vectors for the 5 genres
+        Y_hat --> prediction matrix with probability vectors for the 5 genres
+        Z1    --> intermediate matrix needed for back-propagation (1st layer before ReLU)
+        A1    --> intermediate matrix needed for back-propagation (1st layer after ReLU)
     """
-    y_hat = []
+    #layer 1
+    Z1 = np.matmul(X, W1) + b1
 
-    for i in range(len(X)):
-        z = np.matmul(X[i], W1) + b1 #layer 1 calculation
-        z = relu(z) #layer 1 Relu activation 
-        z = np.matmul(z, W2) + b2 #output layer calculation
-        z = np.exp(z) #softmax part 1
-        z /= np.sum(z) #softmax part 2
-        y_hat.append(z)
+    #layer 1 ReLU activation
+    A1 = np.maximum(0, Z1)
 
-    return y_hat
+    #layer 2
+    Z2 = np.matmul(A1, W2) + b2
+
+    #softmax
+    Z2_shifted = Z2 - np.max(Z2, axis=1, keepdims=True) #to avoid big exponentials that previously caused bugs 
+    exp_Z = np.exp(Z2_shifted)
+    Y_hat = exp_Z / np.sum(exp_Z, axis=1, keepdims=True)
+
+    return Y_hat, Z1, A1
 
 def compute_cost(y_hat, y, W1, W2, lambda_):
     """
@@ -92,20 +92,65 @@ def compute_cost(y_hat, y, W1, W2, lambda_):
     J /= m 
     return J
 
-def compute_gradient(X, y, W1, b1, W2, b2):
-    return  #to finish
+def compute_gradient(X, y, W1, b1, W2, b2, Y_hat, Z1, A1, lambda_):
+    """
+    Input: 
+        X, y            --> training data
+        W1, b1, W2, b2  --> current model parameters
+        Y_hat, Z1, A1   --> variables calculated from prediction (matrices)
+        lambda_         --> regularization constant
+    Output:
+        d_W1, d_W2      --> gradient of weights
+        d_b1, d_b2      --> gradient of biases
+    """
+    m = len(y)
+    
+    #convert y to matrix of 1-hot encoded vectors (example: [0, 0, 1, 0, 0] instead of 2)
+    Y_1hot = np.zeros_like(Y_hat)
+    Y_1hot[np.arange(m), y] = 1
 
-def apply_gradient_descent(X):
-    return 
+    d_Z2 = Y_hat - Y_1hot
 
+    d_W2 = (1/m) * np.matmul(A1.T ,d_Z2) + (lambda_/m) * W2
+    d_b2 = (1/m) * np.sum(d_Z2, axis=0)
 
+    d_Z1 = np.matmul(d_Z2, W2.T) * (Z1 > 0)
 
+    d_W1 = (1/m) * np.matmul(X.T, d_Z1) + (lambda_/m) * W1
+    d_b1 = (1/m) * np.sum(d_Z1, axis = 0)
+
+    return d_W1, d_b1, d_W2, d_b2
+
+#training the model
 def main():
     X, y, classes = load_processed_data()
     W1, b1, W2, b2 = initialise_parameters()
-    y_hat = prediction(X, W1, b1, W2, b2)
-    print(compute_cost(y_hat, y, W1, W2, lambda_= 0))
+
+    #PARAMETERS
+    LEARNING_RATE = 0.02 #learning strength
+    EPOCHS = 5000 #learning iterations
+    LAMBDA_ = 0  #regularization term
     
+    print(f"\nStarting training on {len(X)} images...")
+    
+    for i in range(EPOCHS):
+
+        Y_hat, Z1, A1 = prediction(X, W1, b1, W2, b2)
+        
+        #message every n iterations to signal cost
+        if i % 50 == 0:
+            cost = compute_cost(Y_hat, y, W1, W2, LAMBDA_)
+            print(f"Epoch {i}: Cost = {cost}")
+        
+        #calculate gradients
+        d_W1, d_b1, d_W2, d_b2 = compute_gradient(X, y, W1, b1, W2, b2, Y_hat, Z1, A1, LAMBDA_)
+        
+        #update weights
+        W1 = W1 - LEARNING_RATE * d_W1
+        b1 = b1 - LEARNING_RATE * d_b1
+        W2 = W2 - LEARNING_RATE * d_W2
+        b2 = b2 - LEARNING_RATE * d_b2
+
 
 if __name__ == "__main__":
     main()
